@@ -27,23 +27,37 @@ chrome.storage.local.get("pendingPrompt", (result) => {
     return el;
   }
 
-  function submit() {
-    setTimeout(() => {
-      const sendBtn = document.querySelector("button.send-button");
-      if (sendBtn) {
-        sendBtn.click();
+  function waitForSendButton() {
+    const sendBtn = document.querySelector("button.send-button:not([aria-disabled='true'])");
+    if (sendBtn) {
+      sendBtn.click();
+      return;
+    }
+    const obs = new MutationObserver(() => {
+      const btn = document.querySelector("button.send-button:not([aria-disabled='true'])");
+      if (btn) {
+        obs.disconnect();
+        btn.click();
       }
-    }, 500);
+    });
+    obs.observe(document.body, { childList: true, subtree: true, attributes: true });
+    setTimeout(() => obs.disconnect(), 15000);
   }
 
-  const el = tryFillPrompt();
-  if (el) { submit(); return; }
+  function fillAndSubmit() {
+    const el = tryFillPrompt();
+    if (el) {
+      setTimeout(waitForSendButton, 500);
+      return true;
+    }
+    return false;
+  }
+
+  if (fillAndSubmit()) return;
 
   const observer = new MutationObserver((_mutations, obs) => {
-    const filled = tryFillPrompt();
-    if (filled) {
+    if (fillAndSubmit()) {
       obs.disconnect();
-      submit();
     }
   });
 
