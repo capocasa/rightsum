@@ -8,7 +8,5 @@ document.addEventListener("click", (e) => {
   e.stopPropagation();
 
   const prompt = `Summarize ${link.href}`;
-  chrome.storage.local.set({ pendingPrompt: prompt }, () => {
-    window.open("https://gemini.google.com/app", "_blank");
-  });
+  chrome.runtime.sendMessage({ type: "openGemini", prompt });
 }, true);
